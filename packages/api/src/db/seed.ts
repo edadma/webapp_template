@@ -1,21 +1,17 @@
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import { migrate } from '@petradb/drizzle'
 import { db, schema } from './index.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const now = new Date().toISOString()
 
 export async function seed() {
-  await db.$session.execute(`
-    CREATE TABLE users (
-      id SERIAL PRIMARY KEY,
-      username TEXT NOT NULL UNIQUE,
-      full_name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      is_active BOOLEAN NOT NULL DEFAULT true,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    )
-  `)
+  // Apply migrations to create tables
+  await migrate(db, { migrationsFolder: join(__dirname, 'migrations') })
 
+  // Seed data
   await db.insert(schema.users).values({
     username: 'admin',
     fullName: 'Admin User',
